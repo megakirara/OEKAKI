@@ -1,11 +1,10 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#080617">
-  <title>🖍️ (　´ᯅ`　) 🎨</title>
+  <meta name="theme-color" content="#070720">
+  <title>🖍️ ( ´ᯅ` ) 🎨</title>
 
   <style>
     :root {
@@ -13,7 +12,10 @@
       --blue: #69eaff;
       --purple: #b78aff;
       --white: #f7edff;
-      --bg: #080617;
+      --bg: #070720;
+      --neon-pink: #ff7ad9;
+      --neon-cyan: #4de1ff;
+      --neon-yellow: #ffe84a;
     }
 
     * {
@@ -23,6 +25,32 @@
     html {
       min-height: 100%;
       background: var(--bg);
+    }
+
+    #background-image {
+      position: fixed;
+      inset: 0;
+      z-index: -3;
+      pointer-events: none;
+      background-color: var(--bg);
+      background-image:
+        linear-gradient(rgba(7, 7, 32, 0.30), rgba(7, 7, 32, 0.40)),
+        url("files/neon_back.jpg");
+      background-repeat: no-repeat, repeat;
+      background-attachment: fixed, fixed;
+      background-position: center, center;
+      background-size: auto, 888px auto;
+    }
+
+    #background-wrap {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -2;
+      pointer-events: none;
+      transition: transform 0.1s ease-out;
     }
 
     body {
@@ -36,10 +64,7 @@
         "Hiragino Kaku Gothic ProN",
         "Yu Gothic",
         sans-serif;
-      background:
-        linear-gradient(rgba(7, 4, 23, 0.62), rgba(7, 4, 23, 0.78)),
-        url("files/neon_back.jpg") center center / cover fixed,
-        var(--bg);
+      background: transparent;
     }
 
     button,
@@ -54,7 +79,7 @@
     .ambient {
       position: fixed;
       inset: 0;
-      z-index: 0;
+      z-index: -1;
       overflow: hidden;
       pointer-events: none;
     }
@@ -131,6 +156,17 @@
         transform: translate3d(var(--drift), -110vh, 0) scale(1.2);
         opacity: 0;
       }
+    }
+
+    .star {
+      position: absolute;
+      border-radius: 50%;
+      animation: twinkle 3s infinite ease-in-out;
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
     }
 
     .page {
@@ -524,17 +560,20 @@
 </head>
 
 <body>
-  <div class="ambient" aria-hidden="true"></div>
-  <div id="spores" aria-hidden="true"></div>
+  <div id="background-image"></div>
+  <div id="background-wrap">
+    <div class="ambient" aria-hidden="true"></div>
+    <div id="spores" aria-hidden="true"></div>
+  </div>
 
   <main class="page">
     <header>
       <p class="eyebrow">KOKO WASHI NO HUNGI TENGOKU</p>
-      <h1>🖍️ (　´ᯅ`　) 🎨</h1>
+      <h1>🖍️ ( ´ᯅ` ) 🎨</h1>
 
       <p class="subtitle">
-        管理人の絵を展示しています(　´ᯅ`　)<br>
-        気になった胞子に触れてみてください🍄
+        わたしの絵置き場です( ´ᯅ` )🎨<br>
+        気になるTHINGSに触れてみてください🍄
       </p>
 
       <p class="hint">✧ TAP A LITTLE SPORE ✧</p>
@@ -574,7 +613,7 @@
       <div class="art-frame">
         <img id="largeArt" src="" alt="">
         <div class="viewer-fallback" id="viewerFallback">
-        🍄(　´ᯅ`；)絵が見つかりません……！<br>
+        🍄( ´ᯅ`；)絵が見つかりません……！<br>
         </div>
       </div>
 
@@ -584,18 +623,6 @@
   </div>
 
   <script>
-    /*
-    ==================================================
-      🍄 展示する作品の一覧 🍄
-
-      thumbnail = 丸いサムネイル画像
-      image     = クリック後に大きく表示する本画像
-      title     = 作品名
-
-      画像を差し替えるときは、この一覧を編集するよ。
-    ==================================================
-    */
-
     const artworks = [
       {
         thumbnail: "smn/dks.png",
@@ -689,7 +716,6 @@
       }
     ];
 
-    // 胞子の色
     const sporeColors = [
       "#ff69e8",
       "#69eaff",
@@ -739,6 +765,32 @@
 
       sporesContainer.appendChild(spore);
     }
+
+    /* ★ 背景のキラキラ星（100個）を追加 ★ */
+    const bgWrap = document.getElementById("background-wrap");
+    const NEON_COLORS = ['#ff7ad9', '#4de1ff', '#ffe84a', '#b68cff'];
+
+    for (let i = 0; i < 100; i++) {
+      const star = document.createElement("div");
+      star.classList.add("star");
+
+      const color = NEON_COLORS[Math.floor(Math.random() * NEON_COLORS.length)];
+
+      star.style.background = color;
+      star.style.boxShadow = `0 0 6px ${color}`;
+      star.style.width = star.style.height = (Math.random() * 2 + 1) + "px";
+      star.style.left = Math.random() * 100 + "%";
+      star.style.top = Math.random() * 100 + "%";
+
+      bgWrap.appendChild(star);
+    }
+
+    /* ★ マウス移動で背景全体が動くパララックス効果 ★ */
+    document.addEventListener("mousemove", (e) => {
+      const moveX = (e.clientX / window.innerWidth - 0.5) * 30;
+      const moveY = (e.clientY / window.innerHeight - 0.5) * 30;
+      bgWrap.style.transform = `translate(${-moveX}px, ${-moveY}px)`;
+    });
 
     const gallery = document.getElementById("gallery");
     const viewer = document.getElementById("artViewer");
