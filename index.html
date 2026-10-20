@@ -204,13 +204,41 @@
 
     h1 {
       margin: 0;
-      color: #fff5ff;
-      font-size: clamp(27px, 5vw, 43px);
-      letter-spacing: 0.08em;
-      text-shadow:
-        0 0 7px #fff,
-        0 0 17px var(--pink),
-        0 0 35px #b42cff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* タイトル画像用の超スローネオン発光アニメーション */
+    .title-img {
+      max-width: 100%;
+      height: auto;
+      max-height: 130px;
+      object-fit: contain;
+      animation: ultraSoftRainbowNeon 80s infinite ease-in-out;
+    }
+
+    @keyframes ultraSoftRainbowNeon {
+      0%, 100% {
+        filter: drop-shadow(0 0 8px #fff) drop-shadow(0 0 18px #ff7ad9) drop-shadow(0 0 32px #ff3dc8);
+        opacity: 0.95;
+      }
+      20% {
+        filter: drop-shadow(0 0 8px #fff) drop-shadow(0 0 18px #4de1ff) drop-shadow(0 0 32px #00eaff);
+        opacity: 0.9;
+      }
+      40% {
+        filter: drop-shadow(0 0 8px #fff) drop-shadow(0 0 18px #b6ff5c) drop-shadow(0 0 32px #82ff28);
+        opacity: 0.95;
+      }
+      60% {
+        filter: drop-shadow(0 0 8px #fff) drop-shadow(0 0 18px #ffe84a) drop-shadow(0 0 32px #ffcc00);
+        opacity: 0.9;
+      }
+      80% {
+        filter: drop-shadow(0 0 8px #fff) drop-shadow(0 0 18px #b68cff) drop-shadow(0 0 32px #924dff);
+        opacity: 0.95;
+      }
     }
 
     .subtitle {
@@ -477,6 +505,10 @@
         font-size: 12px;
       }
 
+      .title-img {
+        max-height: 90px;
+      }
+
       .gallery {
         height: 610px;
         min-height: 530px;
@@ -525,7 +557,7 @@
     <header>
       <p class="eyebrow">KOKO WASHI NO HUNGI TENGOKU</p>
       <a href="https://megakirara.github.io/-KINOKO/" class="title-link">
-        <h1>🖍️ ( ´ᯅ` ) 🎨</h1>
+        <h1><img src="files/kinoko_dosei2.png" alt="🖍️ ( ´ᯅ` ) 🎨" class="title-img"></h1>
       </a>
 
       <p class="subtitle">
