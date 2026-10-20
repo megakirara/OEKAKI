@@ -27,7 +27,6 @@
       background: var(--bg);
     }
 
-    /* ★ 他のページと完全に同じ「555px自動リピート」の背景設定 ★ */
     #background-image {
       position: fixed;
       inset: 0;
@@ -716,7 +715,6 @@
       sporesContainer.appendChild(spore);
     }
 
-    /* ★ 背景のキラキラ星（100個）を追加 ★ */
     const bgWrap = document.getElementById("background-wrap");
     const NEON_COLORS = ['#ff7ad9', '#4de1ff', '#ffe84a', '#b68cff'];
 
@@ -735,7 +733,6 @@
       bgWrap.appendChild(star);
     }
 
-    /* ★ マウス移動で背景全体が動くパララックス効果 ★ */
     document.addEventListener("mousemove", (e) => {
       const moveX = (e.clientX / window.innerWidth - 0.5) * 30;
       const moveY = (e.clientY / window.innerHeight - 0.5) * 30;
@@ -847,7 +844,6 @@
         gallery.appendChild(button);
       });
 
-      // オーブ生成後にオンマウスキラキラを再適用
       setupSparkle();
     }
 
@@ -896,7 +892,6 @@
       viewerFallback.style.display = "none";
     });
 
-    /* ★ 画面のどこをクリック（タップ）しても元のページに戻る ★ */
     viewer.addEventListener("click", () => {
       closeArtwork();
     });
@@ -910,7 +905,6 @@
       }
     });
 
-    /* ★ 全ボタン＆インタラクティブ要素対応 オンマウスキラキラ ★ */
     function setupSparkle() {
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
