@@ -20,6 +20,11 @@
 
     * {
       box-sizing: border-box;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
     }
 
     html {
@@ -39,7 +44,7 @@
       background-repeat: no-repeat, repeat;
       background-attachment: fixed, fixed;
       background-position: center, center;
-      background-size: auto, 1111px auto;
+      background-size: auto, 888px auto;
     }
 
     #background-wrap {
@@ -50,7 +55,7 @@
       height: 100%;
       z-index: -2;
       pointer-events: none;
-      transition: transform 0.1s ease-out;
+      will-change: transform;
     }
 
     body {
@@ -65,12 +70,15 @@
         "Yu Gothic",
         sans-serif;
       background: transparent;
-      user-select: none;
     }
 
     img {
       -webkit-user-drag: none;
-      user-select: none;
+      -khtml-user-drag: none;
+      -moz-user-drag: none;
+      -o-user-drag: none;
+      user-drag: none;
+      pointer-events: auto;
     }
 
     button,
@@ -94,26 +102,38 @@
     .ambient::after {
       content: "";
       position: absolute;
-      width: 42vw;
-      height: 42vw;
-      min-width: 260px;
-      min-height: 260px;
+      width: calc(42vw + 160px);
+      height: calc(42vw + 160px);
+      min-width: 420px;
+      min-height: 420px;
       border-radius: 50%;
-      filter: blur(90px);
       opacity: 0.16;
       animation: glow-drift 14s ease-in-out infinite alternate;
+      will-change: transform;
     }
 
     .ambient::before {
-      top: -12%;
-      left: -10%;
-      background: var(--pink);
+      top: calc(-12% - 80px);
+      left: calc(-10% - 80px);
+      background: radial-gradient(
+        circle closest-side,
+        rgba(255, 105, 232, 1) 0%,
+        rgba(255, 105, 232, 1) 45%,
+        rgba(255, 105, 232, 0.5) 76%,
+        rgba(255, 105, 232, 0) 100%
+      );
     }
 
     .ambient::after {
-      right: -12%;
-      bottom: -15%;
-      background: var(--blue);
+      right: calc(-12% - 80px);
+      bottom: calc(-15% - 80px);
+      background: radial-gradient(
+        circle closest-side,
+        rgba(105, 234, 255, 1) 0%,
+        rgba(105, 234, 255, 1) 45%,
+        rgba(105, 234, 255, 0.5) 76%,
+        rgba(105, 234, 255, 0) 100%
+      );
       animation-delay: -6s;
     }
 
@@ -264,14 +284,32 @@
     .gallery {
       position: relative;
       width: 100%;
-      max-width: 1100px;
-      height: clamp(480px, 67vh, 730px);
-      min-height: 480px;
+      max-width: 1200px;
+      height: clamp(500px, 70vh, 780px);
+      min-height: 500px;
       margin: 12px auto 0;
       isolation: isolate;
+      overflow: hidden;
+      overflow: clip;
+      cursor: grab;
+      touch-action: none;
+      border-radius: 16px;
     }
 
-    .gallery::before {
+    .gallery:active {
+      cursor: grabbing;
+    }
+
+    .gallery-inner {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      will-change: transform;
+    }
+
+    .gallery-inner::before {
       content: "";
       position: absolute;
       inset: 7% 5%;
@@ -283,7 +321,7 @@
       pointer-events: none;
     }
 
-    .gallery::after {
+    .gallery-inner::after {
       content: "✧  ·  ✦  ·  ✧";
       position: absolute;
       top: 50%;
@@ -376,8 +414,8 @@
       justify-content: center;
       padding: 8px;
       color: #f6d9ff;
-      font-size: 11px;
-      line-height: 1.5;
+      font-size: 9px;
+      line-height: 1.4;
       text-align: center;
       overflow-wrap: anywhere;
       background:
@@ -515,12 +553,12 @@
       }
 
       .gallery {
-        height: 610px;
-        min-height: 530px;
+        height: 560px;
+        min-height: 480px;
         margin-top: 8px;
       }
 
-      .gallery::before {
+      .gallery-inner::before {
         inset: 5% 0;
       }
 
@@ -567,10 +605,10 @@
 
       <p class="subtitle">
         絵置き場です( ´ᯅ` )🎨<br>
-        気になるTHINGSに触れてみてください🍄
+        任意のTHINGSに触れてみて頂戴🍄
       </p>
 
-      <p class="hint">✧ TAP A LITTLE SPORE ✧</p>
+      <p class="hint">✧ DRAG &amp; TAP SPORES ✧</p>
     </header>
 
     <section
@@ -578,6 +616,7 @@
       id="gallery"
       aria-label="作品一覧"
     >
+      <div class="gallery-inner" id="galleryInner"></div>
     </section>
 
     <footer>
@@ -599,7 +638,7 @@
       <div class="art-frame">
         <img id="largeArt" src="" alt="">
         <div class="viewer-fallback" id="viewerFallback">
-        🍄( ´ᯅ`；)絵が見つかりません……！<br>
+          🍄( ´ᯅ`；)絵が見つかりません……！<br>
         </div>
       </div>
 
@@ -613,105 +652,51 @@
 
     document.addEventListener("contextmenu", (e) => {
       e.preventDefault();
-    });
+    }, false);
 
     document.addEventListener("dragstart", (e) => {
       if (e.target.tagName === "IMG") {
         e.preventDefault();
       }
-    });
+    }, false);
 
     const artworks = [
-      {
-        thumbnail: "smn/dks.png",
-        image: "art/dekame.jpg",
-        title: "でか目ちゃん"
-      },
-      {
-        thumbnail: "smn/fas.png",
-        image: "art/famoi.jpg",
-        title: "ふぇもいちゃん"
-      },
-      {
-        thumbnail: "smn/h2s.png",
-        image: "art/ht2.jpg",
-        title: "フラワー鳥まんじゅう2号"
-      },
-      {
-        thumbnail: "smn/hts.png",
-        image: "art/ht.jpg",
-        title: "フラワー鳥まんじゅう"
-      },
-      {
-        thumbnail: "smn/ins.png",
-        image: "art/inaiko.jpg",
-        title: "いない子"
-      },
-      {
-        thumbnail: "smn/jns.png",
-        image: "art/jane.jpg",
-        title: "じぇいんちゃん"
-      },
-      {
-        thumbnail: "smn/khs.png",
-        image: "art/kuragehead.jpg",
-        title: "くらげあたまちゃん"
-      },
-      {
-        thumbnail: "smn/krs.png",
-        image: "art/kurages.jpg",
-        title: "くらげ親子"
-      },
-      {
-        thumbnail: "smn/mds.png",
-        image: "art/medama.jpg",
-        title: "めんたま"
-      },
-      {
-        thumbnail: "smn/n2s.png",
-        image: "art/neki2.jpg",
-        title: "おねいさん2号"
-      },
-      {
-        thumbnail: "smn/nks.png",
-        image: "art/neki.jpg",
-        title: "おねいさん"
-      },
-      {
-        thumbnail: "smn/ods.png",
-        image: "art/oddeye.jpg",
-        title: "オッドアイちゃん"
-      },
-      {
-        thumbnail: "smn/prs.png",
-        image: "art/primary0.jpg",
-        title: "プライマリーゼロちゃん"
-      },
-      {
-        thumbnail: "smn/tas.png",
-        image: "art/tama.jpg",
-        title: "たまちゃん"
-      },
-      {
-        thumbnail: "smn/tms.png",
-        image: "art/tempa.jpg",
-        title: "天パちゃん"
-      },
-      {
-        thumbnail: "smn/ums.png",
-        image: "art/uma2ra.jpg",
-        title: "ウマヅラさん"
-      },
-      {
-        thumbnail: "smn/yms.png",
-        image: "art/yamiko.jpg",
-        title: "病み子"
-      },
-      {
-        thumbnail: "smn/yrs.png",
-        image: "art/yuriko.jpg",
-        title: "ゆりこちゃん"
-      }
+      { thumbnail: "smn/dks.png", image: "art/dekame.jpg", title: "でか目ちゃん" },
+      { thumbnail: "smn/fas.png", image: "art/famoi.jpg", title: "ふぇもいちゃん" },
+      { thumbnail: "smn/h2s.png", image: "art/ht2.jpg", title: "フラワー鳥まんじゅう2号" },
+      { thumbnail: "smn/hts.png", image: "art/ht.jpg", title: "フラワー鳥まんじゅう" },
+      { thumbnail: "smn/ins.png", image: "art/inaiko.jpg", title: "いない子" },
+      { thumbnail: "smn/jns.png", image: "art/jane.jpg", title: "じぇいんちゃん" },
+      { thumbnail: "smn/khs.png", image: "art/kuragehead.jpg", title: "くらげあたまちゃん" },
+      { thumbnail: "smn/krs.png", image: "art/kurages.jpg", title: "くらげ親子" },
+      { thumbnail: "smn/mds.png", image: "art/medama.jpg", title: "めんたま" },
+      { thumbnail: "smn/n2s.png", image: "art/neki2.jpg", title: "おねいさん2号" },
+      { thumbnail: "smn/nks.png", image: "art/neki.jpg", title: "おねいさん" },
+      { thumbnail: "smn/ods.png", image: "art/oddeye.jpg", title: "オッドアイちゃん" },
+      { thumbnail: "smn/prs.png", image: "art/primary0.jpg", title: "プライマリーゼロちゃん" },
+      { thumbnail: "smn/tas.png", image: "art/tama.jpg", title: "たまちゃん" },
+      { thumbnail: "smn/tms.png", image: "art/tempa.jpg", title: "天パちゃん" },
+      { thumbnail: "smn/ums.png", image: "art/uma2ra.jpg", title: "ウマヅラさん" },
+      { thumbnail: "smn/yms.png", image: "art/yamiko.jpg", title: "病み子" },
+      { thumbnail: "smn/yrs.png", image: "art/yuriko.jpg", title: "ゆりこちゃん" },
+      { thumbnail: "smn/bomb.png", image: "art/bomb.jpg", title: "ボンバーマンもどき" },
+      { thumbnail: "smn/boy.png", image: "art/boy.jpg", title: "わ○さ生活（仮）" },
+      { thumbnail: "smn/ho4ko.png", image: "art/ho4ko.jpg", title: "星子ちゃん" },
+      { thumbnail: "smn/jigazo1.png", image: "art/jigazo1.jpg", title: "500億倍美化自画像１" },
+      { thumbnail: "smn/jigazo2.png", image: "art/jigazo2.jpg", title: "500億倍美化自画像２" },
+      { thumbnail: "smn/jigazo3.png", image: "art/jigazo3.jpg", title: "500億倍美化自画像３" },
+      { thumbnail: "smn/jigazo4.png", image: "art/jigazo4.jpg", title: "500億倍美化自画像４" },
+      { thumbnail: "smn/mayuko.png", image: "art/mayuko.jpg", title: "まゆ子たち" },
+      { thumbnail: "smn/yoru.png", image: "art/yoru.jpg", title: "夜子ちゃん" },
+      { thumbnail: "smn/foo.png", image: "art/foo.jpg", title: "フードちゃん" },
+      { thumbnail: "smn/BB.png", image: "art/BB.jpg", title: "BB" },
+      { thumbnail: "smn/hebi.png", image: "art/hebi.jpg", title: "ヨルムンガンドちゃん" },
+      { thumbnail: "smn/inori.png", image: "art/inori.jpg", title: "いのりちゃん" },
+      { thumbnail: "smn/jiko.png", image: "art/jiko.jpg", title: "事故ちゃん" },
+      { thumbnail: "smn/juke2.png", image: "art/juke2.jpg", title: "充血ちゃん" },
+      { thumbnail: "smn/kurage.png", image: "art/kurage.jpg", title: "くらげちゃん" },
+      { thumbnail: "smn/miteruyo.png", image: "art/miteruyo.jpg", title: "みてるよ。" },
+      { thumbnail: "smn/null.png", image: "art/null.jpg", title: "ぬる坊" },
     ];
 
     const sporeColors = [
@@ -782,13 +767,42 @@
       bgWrap.appendChild(star);
     }
 
-    document.addEventListener("mousemove", (e) => {
-      const moveX = (e.clientX / window.innerWidth - 0.5) * 30;
-      const moveY = (e.clientY / window.innerHeight - 0.5) * 30;
-      bgWrap.style.transform = `translate(${-moveX}px,${-moveY}px)`;
-    });
+    (() => {
+      let targetX = 0;
+      let targetY = 0;
+      let currentParallaxX = 0;
+      let currentParallaxY = 0;
+      let parallaxRaf = null;
+
+      function step() {
+        currentParallaxX += (targetX - currentParallaxX) * 0.15;
+        currentParallaxY += (targetY - currentParallaxY) * 0.15;
+
+        bgWrap.style.transform =
+          `translate3d(${currentParallaxX.toFixed(2)}px, ${currentParallaxY.toFixed(2)}px, 0)`;
+
+        if (
+          Math.abs(targetX - currentParallaxX) > 0.05 ||
+          Math.abs(targetY - currentParallaxY) > 0.05
+        ) {
+          parallaxRaf = requestAnimationFrame(step);
+        } else {
+          parallaxRaf = null;
+        }
+      }
+
+      document.addEventListener("pointermove", (e) => {
+        if (e.pointerType !== "mouse") return;
+
+        targetX = -(e.clientX / window.innerWidth - 0.5) * 30;
+        targetY = -(e.clientY / window.innerHeight - 0.5) * 30;
+
+        if (!parallaxRaf) parallaxRaf = requestAnimationFrame(step);
+      }, { passive: true });
+    })();
 
     const gallery = document.getElementById("gallery");
+    const galleryInner = document.getElementById("galleryInner");
     const viewer = document.getElementById("artViewer");
     const largeArt = document.getElementById("largeArt");
     const viewerFallback = document.getElementById("viewerFallback");
@@ -797,50 +811,392 @@
 
     let lastFocusedElement = null;
 
-    function makePositions(count) {
-      const positions = [];
-      const isMobile = window.matchMedia("(max-width: 600px)").matches;
+    const baseDiameters = artworks.map(() => 48 + Math.random() * 34);
 
-      const minX = isMobile ? 10 : 8;
-      const maxX = isMobile ? 90 : 92;
-      const minY = 9;
-      const maxY = 91;
-      const minDistance = isMobile ? 17 : 15;
+    let areaScale = 1;
 
-      let attempts = 0;
+    function packOrbs(diameters, width, height) {
+      const EDGE = 14;
+      const GAP = 12;
+      const TRIES = 300;
 
-      while (positions.length < count && attempts < count * 150) {
-        attempts++;
+      const order = diameters
+        .map((_, index) => index)
+        .sort((a, b) => diameters[b] - diameters[a]);
 
-        const x = minX + Math.random() * (maxX - minX);
-        const y = minY + Math.random() * (maxY - minY);
+      const placed = [];
+      const result = new Array(diameters.length);
+      let worstClearance = Infinity;
 
-        const hasSpace = positions.every(position => {
-          const dx = (x - position.x) * (isMobile ? 0.8 : 1);
-          const dy = y - position.y;
+      for (const index of order) {
+        const radius = diameters[index] / 2;
 
-          return Math.sqrt(dx * dx + dy * dy) > minDistance;
-        });
+        const minX = radius + EDGE;
+        const maxX = width - radius - EDGE;
+        const minY = radius + EDGE;
+        const maxY = height - radius - EDGE;
 
-        if (hasSpace) {
-          positions.push({ x, y });
+        let bestPosition = null;
+        let bestClearance = -Infinity;
+
+        for (let t = 0; t < TRIES; t++) {
+          const x = maxX > minX
+            ? minX + Math.random() * (maxX - minX)
+            : width / 2;
+
+          const y = maxY > minY
+            ? minY + Math.random() * (maxY - minY)
+            : height / 2;
+
+          let clearance = Infinity;
+
+          for (const other of placed) {
+            const distance = Math.hypot(x - other.x, y - other.y);
+            clearance = Math.min(clearance, distance - radius - other.r);
+          }
+
+          if (clearance > bestClearance) {
+            bestClearance = clearance;
+            bestPosition = { x, y };
+          }
+
+          if (clearance >= GAP) break;
+        }
+
+        placed.push({ x: bestPosition.x, y: bestPosition.y, r: radius });
+        result[index] = { x: bestPosition.x, y: bestPosition.y, d: diameters[index] };
+        worstClearance = Math.min(worstClearance, bestClearance);
+      }
+
+      return { positions: result, worstClearance };
+    }
+
+    function layoutOrbs(diameters, galleryWidth, galleryHeight) {
+      const MIN_OK_CLEARANCE = 4;
+      const AREA_SCALES = [1, 1.2, 1.45, 1.75, 2.1, 2.5];
+      const DIAMETER_SCALES = [1, 0.94];
+
+      let best = null;
+
+      for (const area of AREA_SCALES) {
+        for (const scale of DIAMETER_SCALES) {
+          const width = galleryWidth * area;
+          const height = galleryHeight * area;
+
+          const attempt = packOrbs(
+            diameters.map((d) => d * scale),
+            width,
+            height
+          );
+
+          const candidate = {
+            positions: attempt.positions,
+            areaScale: area,
+            width,
+            height,
+            worstClearance: attempt.worstClearance
+          };
+
+          if (attempt.worstClearance >= MIN_OK_CLEARANCE) {
+            return candidate;
+          }
+
+          if (!best || candidate.worstClearance > best.worstClearance) {
+            best = candidate;
+          }
         }
       }
 
-      while (positions.length < count) {
-        positions.push({
-          x: minX + Math.random() * (maxX - minX),
-          y: minY + Math.random() * (maxY - minY)
+      return best;
+    }
+
+    const SPARKLE_MARKS = ["✦", "✧", "✨"];
+
+    function attachSparkle(element) {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+      function sparkle() {
+        const rect = element.getBoundingClientRect();
+        const spark = document.createElement("span");
+
+        spark.textContent =
+          SPARKLE_MARKS[Math.floor(Math.random() * SPARKLE_MARKS.length)];
+
+        const sparkLeft = rect.left + window.scrollX + Math.random() * rect.width;
+        const sparkTop = rect.top + window.scrollY + Math.random() * rect.height;
+
+        Object.assign(spark.style, {
+          position: "absolute",
+          left: sparkLeft + "px",
+          top: sparkTop + "px",
+          zIndex: "9999",
+          pointerEvents: "none",
+          color: NEON_COLORS[Math.floor(Math.random() * NEON_COLORS.length)],
+          fontSize: (9 + Math.random() * 10) + "px",
+          textShadow: "0 0 8px currentColor",
+          opacity: "1",
+          transition: "transform 750ms ease-out, opacity 750ms ease-out"
         });
+
+        document.body.appendChild(spark);
+
+        requestAnimationFrame(() => {
+          const dx = (Math.random() - 0.5) * 44;
+          const dy = -(18 + Math.random() * 32);
+          const rot = (Math.random() - 0.5) * 180;
+          spark.style.transform =
+            `translate(${dx}px, ${dy}px) rotate(${rot}deg) scale(0.4)`;
+          spark.style.opacity = "0";
+        });
+
+        window.setTimeout(() => spark.remove(), 800);
       }
 
-      return positions;
+      let timer = null;
+
+      function stop() {
+        if (timer) {
+          window.clearInterval(timer);
+          timer = null;
+        }
+      }
+
+      element.addEventListener("pointerenter", (e) => {
+        if (e.pointerType !== "mouse" || timer) return;
+        sparkle();
+        timer = window.setInterval(sparkle, 90);
+      });
+
+      element.addEventListener("pointerleave", stop);
+      element.addEventListener("pointercancel", stop);
+    }
+
+    const MIN_PAN = 150;
+    const PAN_SLACK = 40;
+    const DRAG_THRESHOLD = 6;
+
+    let currentX = 0;
+    let currentY = 0;
+    let velocityX = 0;
+    let velocityY = 0;
+    let inertiaRaf = null;
+
+    function panLimits() {
+      const extraX = ((areaScale - 1) / 2) * gallery.clientWidth + PAN_SLACK;
+      const extraY = ((areaScale - 1) / 2) * gallery.clientHeight + PAN_SLACK;
+
+      return {
+        x: Math.max(MIN_PAN, extraX),
+        y: Math.max(MIN_PAN, extraY)
+      };
+    }
+
+    function clampPan() {
+      const limit = panLimits();
+
+      if (currentX > limit.x) { currentX = limit.x; velocityX = 0; }
+      if (currentX < -limit.x) { currentX = -limit.x; velocityX = 0; }
+      if (currentY > limit.y) { currentY = limit.y; velocityY = 0; }
+      if (currentY < -limit.y) { currentY = -limit.y; velocityY = 0; }
+    }
+
+    function applyPan() {
+      galleryInner.style.transform =
+        `translate3d(${currentX}px, ${currentY}px, 0)`;
+    }
+
+    function stopInertia() {
+      if (inertiaRaf) {
+        cancelAnimationFrame(inertiaRaf);
+        inertiaRaf = null;
+      }
+
+      velocityX = 0;
+      velocityY = 0;
+    }
+
+    function startInertia() {
+      let last = performance.now();
+
+      function step(now) {
+        const frames = Math.min(now - last, 50) / 16.67;
+        last = now;
+
+        currentX += velocityX * frames;
+        currentY += velocityY * frames;
+
+        const decay = Math.pow(0.92, frames);
+        velocityX *= decay;
+        velocityY *= decay;
+
+        clampPan();
+        applyPan();
+
+        if (Math.abs(velocityX) > 0.3 || Math.abs(velocityY) > 0.3) {
+          inertiaRaf = requestAnimationFrame(step);
+        } else {
+          inertiaRaf = null;
+        }
+      }
+
+      inertiaRaf = requestAnimationFrame(step);
+    }
+
+    let activePointerId = null;
+    let isDragging = false;
+    let pointerStartX = 0;
+    let pointerStartY = 0;
+    let originX = 0;
+    let originY = 0;
+    let lastPointerX = 0;
+    let lastPointerY = 0;
+    let lastMoveTime = 0;
+    let suppressClickUntil = 0;
+
+    gallery.addEventListener("pointerdown", (e) => {
+      if (viewer.classList.contains("is-open")) return;
+
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      if (activePointerId !== null) return;
+
+      stopInertia();
+
+      activePointerId = e.pointerId;
+      isDragging = false;
+
+      pointerStartX = e.clientX;
+      pointerStartY = e.clientY;
+      originX = currentX;
+      originY = currentY;
+      lastPointerX = e.clientX;
+      lastPointerY = e.clientY;
+      lastMoveTime = performance.now();
+    });
+
+    gallery.addEventListener("pointermove", (e) => {
+      if (e.pointerId !== activePointerId) return;
+
+      if (!isDragging) {
+        const moved = Math.hypot(e.clientX - pointerStartX, e.clientY - pointerStartY);
+
+        if (moved <= DRAG_THRESHOLD) return;
+
+        isDragging = true;
+
+        try {
+          gallery.setPointerCapture(e.pointerId);
+        } catch (error) {}
+      }
+
+      const now = performance.now();
+      const elapsed = Math.max(now - lastMoveTime, 1);
+
+      const instantX = ((e.clientX - lastPointerX) / elapsed) * 16.67;
+      const instantY = ((e.clientY - lastPointerY) / elapsed) * 16.67;
+
+      velocityX = velocityX * 0.5 + instantX * 0.5;
+      velocityY = velocityY * 0.5 + instantY * 0.5;
+
+      lastPointerX = e.clientX;
+      lastPointerY = e.clientY;
+      lastMoveTime = now;
+
+      currentX = originX + (e.clientX - pointerStartX);
+      currentY = originY + (e.clientY - pointerStartY);
+
+      clampPan();
+      applyPan();
+    });
+
+    function endPan(e) {
+      if (e.pointerId !== activePointerId) return;
+
+      activePointerId = null;
+
+      try {
+        gallery.releasePointerCapture(e.pointerId);
+      } catch (error) {}
+
+      if (!isDragging) return;
+
+      isDragging = false;
+
+      suppressClickUntil = performance.now() + 120;
+
+      if (performance.now() - lastMoveTime > 80) {
+        velocityX = 0;
+        velocityY = 0;
+      }
+
+      if (Math.abs(velocityX) > 0.3 || Math.abs(velocityY) > 0.3) {
+        startInertia();
+      }
+    }
+
+    gallery.addEventListener("pointerup", endPan);
+    gallery.addEventListener("pointercancel", endPan);
+
+    gallery.addEventListener("click", (e) => {
+      if (performance.now() < suppressClickUntil) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+    }, true);
+
+    function revealOrb(element) {
+      const frame = gallery.getBoundingClientRect();
+      const rect = element.getBoundingClientRect();
+      const margin = 24;
+
+      let dx = 0;
+      let dy = 0;
+
+      if (rect.left < frame.left + margin) {
+        dx = frame.left + margin - rect.left;
+      } else if (rect.right > frame.right - margin) {
+        dx = frame.right - margin - rect.right;
+      }
+
+      if (rect.top < frame.top + margin) {
+        dy = frame.top + margin - rect.top;
+      } else if (rect.bottom > frame.bottom - margin) {
+        dy = frame.bottom - margin - rect.bottom;
+      }
+
+      if (dx === 0 && dy === 0) return;
+
+      stopInertia();
+
+      currentX += dx;
+      currentY += dy;
+
+      clampPan();
+      applyPan();
     }
 
     function renderGallery() {
-      gallery.innerHTML = "";
+      galleryInner.replaceChildren();
 
-      const positions = makePositions(artworks.length);
+      const galleryWidth = gallery.clientWidth || window.innerWidth;
+      const galleryHeight = gallery.clientHeight || 560;
+
+      const layout = layoutOrbs(baseDiameters, galleryWidth, galleryHeight);
+
+      areaScale = layout.areaScale;
+
+      const offset = -((areaScale - 1) / 2) * 100;
+
+      galleryInner.style.width = areaScale * 100 + "%";
+      galleryInner.style.height = areaScale * 100 + "%";
+      galleryInner.style.left = offset + "%";
+      galleryInner.style.top = offset + "%";
+
+      stopInertia();
+      currentX = 0;
+      currentY = 0;
+      applyPan();
+
+      const fragment = document.createDocumentFragment();
 
       artworks.forEach((art, index) => {
         const button = document.createElement("button");
@@ -852,12 +1208,11 @@
           art.title + " を大きく表示"
         );
 
-        const position = positions[index];
-        const diameter = 68 + Math.random() * 40;
+        const orb = layout.positions[index];
 
-        button.style.setProperty("--x", position.x + "%");
-        button.style.setProperty("--y", position.y + "%");
-        button.style.setProperty("--diameter", diameter + "px");
+        button.style.setProperty("--x", (orb.x / layout.width * 100) + "%");
+        button.style.setProperty("--y", (orb.y / layout.height * 100) + "%");
+        button.style.setProperty("--diameter", orb.d + "px");
 
         button.style.setProperty(
           "--float-time",
@@ -872,11 +1227,11 @@
         const img = document.createElement("img");
         img.src = art.thumbnail;
         img.alt = "";
-        img.loading = "lazy";
+        img.decoding = "async";
 
         const fallback = document.createElement("span");
         fallback.className = "image-fallback";
-        fallback.textContent = "🍄\n画像を確認してね";
+        fallback.textContent = "🍄\n画像";
 
         img.addEventListener("error", () => {
           img.style.display = "none";
@@ -890,10 +1245,16 @@
           openArtwork(index, button);
         });
 
-        gallery.appendChild(button);
+        button.addEventListener("focus", () => {
+          if (button.matches(":focus-visible")) revealOrb(button);
+        });
+
+        attachSparkle(button);
+
+        fragment.appendChild(button);
       });
 
-      setupSparkle();
+      galleryInner.appendChild(fragment);
     }
 
     function openArtwork(index, sourceButton) {
@@ -954,67 +1315,23 @@
       }
     });
 
-    function setupSparkle() {
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-      const targets = document.querySelectorAll("h1, .title-link, .art-orb");
-      const marks = ["✦", "✧", "✨"];
-
-      function sparkle(element) {
-        const rect = element.getBoundingClientRect();
-        const spark = document.createElement("span");
-
-        spark.textContent = marks[Math.floor(Math.random() * marks.length)];
-
-        const sparkLeft = rect.left + window.scrollX + Math.random() * rect.width;
-        const sparkTop = rect.top + window.scrollY + Math.random() * rect.height;
-
-        Object.assign(spark.style, {
-          position: "absolute",
-          left: sparkLeft + "px",
-          top: sparkTop + "px",
-          zIndex: "9999",
-          pointerEvents: "none",
-          color: NEON_COLORS[Math.floor(Math.random() * NEON_COLORS.length)],
-          fontSize: (9 + Math.random() * 10) + "px",
-          textShadow: "0 0 8px currentColor",
-          opacity: "1",
-          transition: "transform 750ms ease-out, opacity 750ms ease-out"
-        });
-
-        document.body.appendChild(spark);
-
-        requestAnimationFrame(() => {
-          const dx = (Math.random() - 0.5) * 44;
-          const dy = -(18 + Math.random() * 32);
-          const rot = (Math.random() - 0.5) * 180;
-          spark.style.transform =
-            `translate(${dx}px, ${dy}px) rotate(${rot}deg) scale(0.4)`;
-          spark.style.opacity = "0";
-        });
-
-        window.setTimeout(() => spark.remove(), 800);
-      }
-
-      targets.forEach((element) => {
-        let timer = null;
-
-        element.addEventListener("mouseenter", () => {
-          if (timer) return;
-          sparkle(element);
-          timer = window.setInterval(() => sparkle(element), 90);
-        });
-
-        element.addEventListener("mouseleave", () => {
-          if (timer) {
-            window.clearInterval(timer);
-            timer = null;
-          }
-        });
-      });
-    }
+    attachSparkle(document.querySelector(".title-link"));
 
     renderGallery();
+
+    let lastWidth = window.innerWidth;
+    let resizeTimer = null;
+
+    window.addEventListener("resize", () => {
+      window.clearTimeout(resizeTimer);
+
+      resizeTimer = window.setTimeout(() => {
+        if (window.innerWidth !== lastWidth) {
+          lastWidth = window.innerWidth;
+          renderGallery();
+        }
+      }, 200);
+    });
   </script>
 </body>
 </html>
