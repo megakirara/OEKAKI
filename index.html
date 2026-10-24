@@ -317,19 +317,14 @@
       position: relative;
       width: 100%;
       max-width: 1200px;
-      height: clamp(500px, 70vh, 780px);
-      min-height: 500px;
+      height: clamp(520px, 72vh, 800px);
+      min-height: 520px;
       margin: 12px auto 0;
       isolation: isolate;
       overflow: hidden;
       overflow: clip;
-      cursor: grab;
       touch-action: none;
       border-radius: 16px;
-    }
-
-    .gallery:active {
-      cursor: grabbing;
     }
 
     .gallery-inner {
@@ -338,7 +333,6 @@
       left: 0;
       width: 100%;
       height: 100%;
-      will-change: transform;
     }
 
     .gallery-inner::before {
@@ -369,15 +363,13 @@
 
     .art-orb {
       position: absolute;
-      left: var(--x);
-      top: var(--y);
       width: var(--diameter);
       height: var(--diameter);
       padding: 0;
       overflow: hidden;
       border: 1px solid rgba(255, 255, 255, 0.75);
       border-radius: 50%;
-      cursor: pointer;
+      cursor: grab;
       background:
         radial-gradient(circle at 30% 25%, #5d376f, #16102d 70%);
       box-shadow:
@@ -385,13 +377,16 @@
         0 0 22px rgba(183, 138, 255, 0.4),
         inset 0 0 14px rgba(255, 255, 255, 0.18);
       transform: translate(-50%, -50%);
-      animation: float-orb var(--float-time) ease-in-out infinite alternate;
-      animation-delay: var(--float-delay);
       transition:
         box-shadow 0.3s ease,
         border-color 0.3s ease,
         filter 0.3s ease;
       z-index: 2;
+      touch-action: none;
+    }
+
+    .art-orb:active {
+      cursor: grabbing;
     }
 
     .art-orb img {
@@ -400,7 +395,8 @@
       height: 100%;
       border-radius: 50%;
       object-fit: cover;
-      transition: transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1);
+      pointer-events: none;
+      transition: transform 0.3s ease;
     }
 
     .art-orb:hover,
@@ -427,15 +423,6 @@
       border: 1px solid rgba(255, 255, 255, 0.24);
       border-radius: 50%;
       pointer-events: none;
-    }
-
-    @keyframes float-orb {
-      from {
-        translate: 0 -8px;
-      }
-      to {
-        translate: 7px 12px;
-      }
     }
 
     .image-fallback {
@@ -585,7 +572,7 @@
       }
 
       .gallery {
-        height: 560px;
+        height: 520px;
         min-height: 480px;
         margin-top: 8px;
       }
@@ -637,10 +624,10 @@
 
       <p class="subtitle">
         絵置き場です( ´ᯅ` )🎨<br>
-        任意のTHINGSに触れてみて頂戴🍄
+        ボールを転がして遊んでみて頂戴🍄
       </p>
 
-      <p class="hint">✧ DRAG &amp; TAP SPORES ✧</p>
+      <p class="hint">✧ THROW &amp; ROLL THE BALLS ✧</p>
     </header>
 
     <section
@@ -842,105 +829,8 @@
     const artNumber = document.getElementById("artNumber");
 
     let lastFocusedElement = null;
-
-    const baseDiameters = artworks.map(() => 48 + Math.random() * 34);
-
-    let areaScale = 1;
-
-    function packOrbs(diameters, width, height) {
-      const EDGE = 14;
-      const GAP = 12;
-      const TRIES = 300;
-
-      const order = diameters
-        .map((_, index) => index)
-        .sort((a, b) => diameters[b] - diameters[a]);
-
-      const placed = [];
-      const result = new Array(diameters.length);
-      let worstClearance = Infinity;
-
-      for (const index of order) {
-        const radius = diameters[index] / 2;
-
-        const minX = radius + EDGE;
-        const maxX = width - radius - EDGE;
-        const minY = radius + EDGE;
-        const maxY = height - radius - EDGE;
-
-        let bestPosition = null;
-        let bestClearance = -Infinity;
-
-        for (let t = 0; t < TRIES; t++) {
-          const x = maxX > minX
-            ? minX + Math.random() * (maxX - minX)
-            : width / 2;
-
-          const y = maxY > minY
-            ? minY + Math.random() * (maxY - minY)
-            : height / 2;
-
-          let clearance = Infinity;
-
-          for (const other of placed) {
-            const distance = Math.hypot(x - other.x, y - other.y);
-            clearance = Math.min(clearance, distance - radius - other.r);
-          }
-
-          if (clearance > bestClearance) {
-            bestClearance = clearance;
-            bestPosition = { x, y };
-          }
-
-          if (clearance >= GAP) break;
-        }
-
-        placed.push({ x: bestPosition.x, y: bestPosition.y, r: radius });
-        result[index] = { x: bestPosition.x, y: bestPosition.y, d: diameters[index] };
-        worstClearance = Math.min(worstClearance, bestClearance);
-      }
-
-      return { positions: result, worstClearance };
-    }
-
-    function layoutOrbs(diameters, galleryWidth, galleryHeight) {
-      const MIN_OK_CLEARANCE = 4;
-      const AREA_SCALES = [1, 1.2, 1.45, 1.75, 2.1, 2.5];
-      const DIAMETER_SCALES = [1, 0.94];
-
-      let best = null;
-
-      for (const area of AREA_SCALES) {
-        for (const scale of DIAMETER_SCALES) {
-          const width = galleryWidth * area;
-          const height = galleryHeight * area;
-
-          const attempt = packOrbs(
-            diameters.map((d) => d * scale),
-            width,
-            height
-          );
-
-          const candidate = {
-            positions: attempt.positions,
-            areaScale: area,
-            width,
-            height,
-            worstClearance: attempt.worstClearance
-          };
-
-          if (attempt.worstClearance >= MIN_OK_CLEARANCE) {
-            return candidate;
-          }
-
-          if (!best || candidate.worstClearance > best.worstClearance) {
-            best = candidate;
-          }
-        }
-      }
-
-      return best;
-    }
+    let balls = [];
+    let physicsRunning = false;
 
     const SPARKLE_MARKS = ["✦", "✧", "✨"];
 
@@ -1003,261 +893,45 @@
       element.addEventListener("pointercancel", stop);
     }
 
-    const MIN_PAN = 150;
-    const PAN_SLACK = 40;
-    const DRAG_THRESHOLD = 6;
-
-    let currentX = 0;
-    let currentY = 0;
-    let velocityX = 0;
-    let velocityY = 0;
-    let inertiaRaf = null;
-
-    function panLimits() {
-      const extraX = ((areaScale - 1) / 2) * gallery.clientWidth + PAN_SLACK;
-      const extraY = ((areaScale - 1) / 2) * gallery.clientHeight + PAN_SLACK;
-
-      return {
-        x: Math.max(MIN_PAN, extraX),
-        y: Math.max(MIN_PAN, extraY)
-      };
-    }
-
-    function clampPan() {
-      const limit = panLimits();
-
-      if (currentX > limit.x) { currentX = limit.x; velocityX = 0; }
-      if (currentX < -limit.x) { currentX = -limit.x; velocityX = 0; }
-      if (currentY > limit.y) { currentY = limit.y; velocityY = 0; }
-      if (currentY < -limit.y) { currentY = -limit.y; velocityY = 0; }
-    }
-
-    function applyPan() {
-      galleryInner.style.transform =
-        `translate3d(${currentX}px, ${currentY}px, 0)`;
-    }
-
-    function stopInertia() {
-      if (inertiaRaf) {
-        cancelAnimationFrame(inertiaRaf);
-        inertiaRaf = null;
-      }
-
-      velocityX = 0;
-      velocityY = 0;
-    }
-
-    function startInertia() {
-      let last = performance.now();
-
-      function step(now) {
-        const frames = Math.min(now - last, 50) / 16.67;
-        last = now;
-
-        currentX += velocityX * frames;
-        currentY += velocityY * frames;
-
-        const decay = Math.pow(0.92, frames);
-        velocityX *= decay;
-        velocityY *= decay;
-
-        clampPan();
-        applyPan();
-
-        if (Math.abs(velocityX) > 0.3 || Math.abs(velocityY) > 0.3) {
-          inertiaRaf = requestAnimationFrame(step);
-        } else {
-          inertiaRaf = null;
-        }
-      }
-
-      inertiaRaf = requestAnimationFrame(step);
-    }
-
-    let activePointerId = null;
-    let isDragging = false;
-    let pointerStartX = 0;
-    let pointerStartY = 0;
-    let originX = 0;
-    let originY = 0;
-    let lastPointerX = 0;
-    let lastPointerY = 0;
-    let lastMoveTime = 0;
-    let suppressClickUntil = 0;
-
-    gallery.addEventListener("pointerdown", (e) => {
-      if (viewer.classList.contains("is-open")) return;
-
-      if (e.pointerType === "mouse" && e.button !== 0) return;
-      if (activePointerId !== null) return;
-
-      stopInertia();
-
-      activePointerId = e.pointerId;
-      isDragging = false;
-
-      pointerStartX = e.clientX;
-      pointerStartY = e.clientY;
-      originX = currentX;
-      originY = currentY;
-      lastPointerX = e.clientX;
-      lastPointerY = e.clientY;
-      lastMoveTime = performance.now();
-    });
-
-    gallery.addEventListener("pointermove", (e) => {
-      if (e.pointerId !== activePointerId) return;
-
-      if (!isDragging) {
-        const moved = Math.hypot(e.clientX - pointerStartX, e.clientY - pointerStartY);
-
-        if (moved <= DRAG_THRESHOLD) return;
-
-        isDragging = true;
-
-        try {
-          gallery.setPointerCapture(e.pointerId);
-        } catch (error) {}
-      }
-
-      const now = performance.now();
-      const elapsed = Math.max(now - lastMoveTime, 1);
-
-      const instantX = ((e.clientX - lastPointerX) / elapsed) * 16.67;
-      const instantY = ((e.clientY - lastPointerY) / elapsed) * 16.67;
-
-      velocityX = velocityX * 0.5 + instantX * 0.5;
-      velocityY = velocityY * 0.5 + instantY * 0.5;
-
-      lastPointerX = e.clientX;
-      lastPointerY = e.clientY;
-      lastMoveTime = now;
-
-      currentX = originX + (e.clientX - pointerStartX);
-      currentY = originY + (e.clientY - pointerStartY);
-
-      clampPan();
-      applyPan();
-    });
-
-    function endPan(e) {
-      if (e.pointerId !== activePointerId) return;
-
-      activePointerId = null;
-
-      try {
-        gallery.releasePointerCapture(e.pointerId);
-      } catch (error) {}
-
-      if (!isDragging) return;
-
-      isDragging = false;
-
-      suppressClickUntil = performance.now() + 120;
-
-      if (performance.now() - lastMoveTime > 80) {
-        velocityX = 0;
-        velocityY = 0;
-      }
-
-      if (Math.abs(velocityX) > 0.3 || Math.abs(velocityY) > 0.3) {
-        startInertia();
-      }
-    }
-
-    gallery.addEventListener("pointerup", endPan);
-    gallery.addEventListener("pointercancel", endPan);
-
-    gallery.addEventListener("click", (e) => {
-      if (performance.now() < suppressClickUntil) {
-        e.stopPropagation();
-        e.preventDefault();
-      }
-    }, true);
-
-    function revealOrb(element) {
-      const frame = gallery.getBoundingClientRect();
-      const rect = element.getBoundingClientRect();
-      const margin = 24;
-
-      let dx = 0;
-      let dy = 0;
-
-      if (rect.left < frame.left + margin) {
-        dx = frame.left + margin - rect.left;
-      } else if (rect.right > frame.right - margin) {
-        dx = frame.right - margin - rect.right;
-      }
-
-      if (rect.top < frame.top + margin) {
-        dy = frame.top + margin - rect.top;
-      } else if (rect.bottom > frame.bottom - margin) {
-        dy = frame.bottom - margin - rect.bottom;
-      }
-
-      if (dx === 0 && dy === 0) return;
-
-      stopInertia();
-
-      currentX += dx;
-      currentY += dy;
-
-      clampPan();
-      applyPan();
-    }
-
-    function renderGallery() {
+    function initPhysicsGallery() {
       galleryInner.replaceChildren();
+      balls = [];
 
-      const galleryWidth = gallery.clientWidth || window.innerWidth;
-      const galleryHeight = gallery.clientHeight || 560;
+      const gWidth = gallery.clientWidth || 800;
+      const gHeight = gallery.clientHeight || 560;
 
-      const layout = layoutOrbs(baseDiameters, galleryWidth, galleryHeight);
+      const diameters = artworks.map(() => 54 + Math.random() * 28);
+      
+      // ランダムにボールの初期位置を重ならないように配置
+      for (let i = 0; i < artworks.length; i++) {
+        const d = diameters[i];
+        const r = d / 2;
+        let x = r + 20 + Math.random() * (gWidth - d - 40);
+        let y = r + 20 + Math.random() * (gHeight - d - 40);
 
-      areaScale = layout.areaScale;
+        // 重なり防止の簡単な調整
+        for (let t = 0; t < 20; t++) {
+          let overlap = false;
+          for (let b of balls) {
+            if (Math.hypot(x - b.x, y - b.y) < r + b.r + 10) {
+              overlap = true;
+              break;
+            }
+          }
+          if (!overlap) break;
+          x = r + 20 + Math.random() * (gWidth - d - 40);
+          y = r + 20 + Math.random() * (gHeight - d - 40);
+        }
 
-      const offset = -((areaScale - 1) / 2) * 100;
-
-      galleryInner.style.width = areaScale * 100 + "%";
-      galleryInner.style.height = areaScale * 100 + "%";
-      galleryInner.style.left = offset + "%";
-      galleryInner.style.top = offset + "%";
-
-      stopInertia();
-      currentX = 0;
-      currentY = 0;
-      applyPan();
-
-      const fragment = document.createDocumentFragment();
-
-      artworks.forEach((art, index) => {
         const button = document.createElement("button");
         button.type = "button";
         button.className = "art-orb";
-
-        button.setAttribute(
-          "aria-label",
-          art.title + " を大きく表示"
-        );
-
-        const orb = layout.positions[index];
-
-        button.style.setProperty("--x", (orb.x / layout.width * 100) + "%");
-        button.style.setProperty("--y", (orb.y / layout.height * 100) + "%");
-        button.style.setProperty("--diameter", orb.d + "px");
-
-        button.style.setProperty(
-          "--float-time",
-          (3 + Math.random() * 4) + "s"
-        );
-
-        button.style.setProperty(
-          "--float-delay",
-          (-Math.random() * 5) + "s"
-        );
+        button.style.width = d + "px";
+        button.style.height = d + "px";
+        button.setAttribute("aria-label", artworks[i].title + " を大きく表示");
 
         const img = document.createElement("img");
-        img.src = art.thumbnail;
+        img.src = artworks[i].thumbnail;
         img.alt = "";
         img.decoding = "async";
 
@@ -1273,25 +947,170 @@
         button.appendChild(img);
         button.appendChild(fallback);
 
-        button.addEventListener("click", () => {
-          openArtwork(index, button);
+        let clickStartTime = 0;
+        let startPointerX = 0;
+        let startPointerY = 0;
+
+        button.addEventListener("pointerdown", (e) => {
+          if (viewer.classList.contains("is-open")) return;
+          button.setPointerCapture(e.pointerId);
+          b.isDragging = true;
+          b.dragOffsetX = 0;
+          b.dragOffsetY = 0;
+          clickStartTime = performance.now();
+          startPointerX = e.clientX;
+          startPointerY = e.clientY;
+          b.vx = 0;
+          b.vy = 0;
+          e.stopPropagation();
         });
 
-        button.addEventListener("focus", () => {
-          if (button.matches(":focus-visible")) revealOrb(button);
+        button.addEventListener("pointermove", (e) => {
+          if (!b.isDragging) return;
+          const rect = gallery.getBoundingClientRect();
+          const targetX = e.clientX - rect.left;
+          const targetY = e.clientY - rect.top;
+          
+          // ドラッグ中の速度計算用
+          b.vx = (targetX - b.x) * 0.4;
+          b.vy = (targetY - b.y) * 0.4;
+          b.x = targetX;
+          b.y = targetY;
         });
+
+        const endDrag = (e) => {
+          if (!b.isDragging) return;
+          b.isDragging = false;
+          try { button.releasePointerCapture(e.pointerId); } catch(err) {}
+
+          const distMoved = Math.hypot(e.clientX - startPointerX, e.clientY - startPointerY);
+          const elapsed = performance.now() - clickStartTime;
+
+          // あまり動かさずに素早く離したら「クリック（開く）」とみなす
+          if (distMoved < 8 && elapsed < 300) {
+            openArtwork(i, button);
+          }
+        };
+
+        button.addEventListener("pointerup", endDrag);
+        button.addEventListener("pointercancel", endDrag);
 
         attachSparkle(button);
+        galleryInner.appendChild(button);
 
-        fragment.appendChild(button);
-      });
+        const b = {
+          index: i,
+          element: button,
+          x: x,
+          y: y,
+          vx: (Math.random() - 0.5) * 2,
+          vy: (Math.random() - 0.5) * 2,
+          r: r,
+          mass: r * r,
+          isDragging: false
+        };
 
-      galleryInner.appendChild(fragment);
+        balls.push(b);
+      }
+
+      if (!physicsRunning) {
+        physicsRunning = true;
+        requestAnimationFrame(updatePhysics);
+      }
+    }
+
+    function updatePhysics() {
+      const gWidth = gallery.clientWidth || 800;
+      const gHeight = gallery.clientHeight || 560;
+      const damping = 0.985; // 摩擦による減速
+      const bounce = 0.75;   // 壁やボール同士の反発係数
+
+      for (let i = 0; i < balls.length; i++) {
+        let b = balls[i];
+
+        if (!b.isDragging) {
+          b.x += b.vx;
+          b.y += b.vy;
+          b.vx *= damping;
+          b.vy *= damping;
+
+          // 壁との衝突（跳ね返り）
+          if (b.x - b.r < 0) {
+            b.x = b.r;
+            b.vx = -b.vx * bounce;
+          } else if (b.x + b.r > gWidth) {
+            b.x = gWidth - b.r;
+            b.vx = -b.vx * bounce;
+          }
+          if (b.y - b.r < 0) {
+            b.y = b.r;
+            b.vy = -b.vy * bounce;
+          } else if (b.y + b.r > gHeight) {
+            b.y = gHeight - b.r;
+            b.vy = -b.vy * bounce;
+          }
+        }
+      }
+
+      // ボール同士の衝突判定・反発
+      for (let i = 0; i < balls.length; i++) {
+        for (let j = i + 1; j < balls.length; j++) {
+          let b1 = balls[i];
+          let b2 = balls[j];
+
+          let dx = b2.x - b1.x;
+          let dy = b2.y - b1.y;
+          let dist = Math.hypot(dx, dy);
+          let minDist = b1.r + b2.r;
+
+          if (dist < minDist && dist > 0) {
+            let overlap = minDist - dist;
+            let nx = dx / dist;
+            let ny = dy / dist;
+
+            // 位置の重なりを解消
+            let totalMass = b1.mass + b2.mass;
+            if (!b1.isDragging && !b2.isDragging) {
+              b1.x -= nx * overlap * (b2.mass / totalMass);
+              b1.y -= ny * overlap * (b2.mass / totalMass);
+              b2.x += nx * overlap * (b1.mass / totalMass);
+              b2.y += ny * overlap * (b1.mass / totalMass);
+            } else if (b1.isDragging) {
+              b2.x += nx * overlap;
+              b2.y += ny * overlap;
+            } else if (b2.isDragging) {
+              b1.x -= nx * overlap;
+              b1.y -= ny * overlap;
+            }
+
+            // 速度の交換・反発
+            let kx = b1.vx - b2.vx;
+            let ky = b1.vy - b2.vy;
+            let p = 2 * (nx * kx + ny * ky) / totalMass;
+
+            if (!b1.isDragging) {
+              b1.vx -= p * b2.mass * nx * bounce;
+              b1.vy -= p * b2.mass * ny * bounce;
+            }
+            if (!b2.isDragging) {
+              b2.vx += p * b1.mass * nx * bounce;
+              b2.vy += p * b1.mass * ny * bounce;
+            }
+          }
+        }
+      }
+
+      // 画面上のHTML要素の位置を更新
+      for (let i = 0; i < balls.length; i++) {
+        let b = balls[i];
+        b.element.style.transform = `translate(${b.x}px, ${b.y}px) translate(-50%, -50%)`;
+      }
+
+      requestAnimationFrame(updatePhysics);
     }
 
     function openArtwork(index, sourceButton) {
       const art = artworks[index];
-
       lastFocusedElement = sourceButton;
 
       largeArt.style.display = "block";
@@ -1423,7 +1242,7 @@
 
     attachSparkle(document.querySelector(".title-link"));
 
-    renderGallery();
+    initPhysicsGallery();
 
     let lastWidth = window.innerWidth;
     let resizeTimer = null;
@@ -1434,7 +1253,7 @@
       resizeTimer = window.setTimeout(() => {
         if (window.innerWidth !== lastWidth) {
           lastWidth = window.innerWidth;
-          renderGallery();
+          initPhysicsGallery();
         }
       }, 200);
     });
